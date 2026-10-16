@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porto de Paranaguá</title>
+<style>
+  :root {
+    --bg: #f5f6f4; --card: #ffffff; --ink: #1c2321; --muted: #5d6865; --line: #dfe3e0;
+    --accent: #0f6e6a; --accent-soft: #e2f0ef; --exp: #1f6fb2; --imp: #b2591f; --warn: #a33b2b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111615; --card: #192120; --ink: #e6ecea; --muted: #94a19d; --line: #2a3533;
+            --accent: #4fb8b1; --accent-soft: #173130; --exp: #6aaee8; --imp: #e89a63; --warn: #e8806e; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; padding: 18px 20px 6px; }
+  h1 { margin: 0; font-size: 20px; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .sub a { color: inherit; }
+  button.atualizar { margin-left: auto; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+  .erro { margin: 6px 20px; padding: 8px 12px; border-radius: 8px; background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+  main { padding: 8px 20px 40px; display: grid; gap: 14px; }
+  .etapas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .etapa { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: left; color: inherit; font: inherit; }
+  .etapa[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .etapa b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .etapa span { color: var(--muted); font-size: 12px; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--card); }
+  input[type=search] { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 8px; padding: 6px 10px; min-width: 220px; font: inherit; }
+  .grade { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .card h2 { margin: 0 0 8px; font-size: 14px; }
+  .tabela { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td small { display: block; color: var(--muted); }
+  .navio { font-weight: 600; min-width: 170px; }
+  .navio small { font-weight: 400; }
+  .sentido { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+  .Exp { color: var(--exp); background: color-mix(in srgb, var(--exp) 14%, transparent); }
+  .Imp { color: var(--imp); background: color-mix(in srgb, var(--imp) 14%, transparent); }
+  .barra { height: 6px; background: var(--line); border-radius: 3px; margin-top: 4px; overflow: hidden; display: flex; }
+  .barra i { display: block; height: 100%; background: var(--accent); }
+  .barra i.exp { background: var(--exp); } .barra i.imp { background: var(--imp); }
+  .totais .item { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin-bottom: 8px; font-size: 13px; }
+  .totais .item .barra { grid-column: 1 / -1; }
+  .totais .t { font-variant-numeric: tabular-nums; }
+  .mud li { margin-bottom: 6px; font-size: 13px; } .mud ul { padding-left: 18px; margin: 0; }
+  .vazio { color: var(--muted); padding: 16px 0; margin: 0; }
+  .selo { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-top: 3px; }
+  .selo.parado { color: var(--warn); background: color-mix(in srgb, var(--warn) 15%, transparent); }
+  .selo.lento { color: var(--imp); background: color-mix(in srgb, var(--imp) 15%, transparent); }
+  .selo.normal { color: var(--accent); background: var(--accent-soft); }
+  .dias { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .dias.longo { color: var(--warn); }
+  .tempo .grande { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .tempo .grande.chuva { color: var(--warn); }
+  .tempo ul { padding-left: 18px; margin: 6px 0 0; font-size: 13px; }
+  @media (max-width: 900px) { .grade { grid-template-columns: 1fr; } .etapas { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Porto de Paranaguá — navios</h1>
+  <span class="sub" id="status">carregando…</span>
+  <button class="atualizar" id="atualizar">Atualizar agora</button>
+</header>
+<div class="erro" id="erro" hidden></div>
+<main>
+  <section class="etapas" id="etapas"></section>
+  <section class="filtros">
+    <span id="grupos"></span>
+    <span style="flex:1"></span>
+    <span id="sentidos"></span>
+    <input type="search" id="busca" placeholder="Buscar navio, mercadoria, agência…">
+  </section>
+  <div class="grade">
+    <section class="card tabela"><table><thead id="cab"></thead><tbody id="linhas"></tbody></table></section>
+    <aside style="display:grid;gap:14px">
+      <section class="card tempo"><h2>Chuva em Paranaguá</h2><div id="tempo"></div></section>
+      <section class="card totais"><h2 id="tituloTotais">Toneladas previstas</h2><div id="totais"></div></section>
+      <section class="card mud"><h2>O que mudou</h2><div id="mudancas"></div></section>
+    </aside>
+  </div>
+</main>
+<script>
+const ETAPAS = [
+  ['ESPERADOS', 'A caminho', 'Anunciados, ainda não chegaram'],
+  ['AO LARGO', 'Ao largo', 'Chegaram e aguardam fundeados'],
+  ['PROGRAMADOS', 'Programados', 'Próximas atracações'],
+  ['ATRACADOS', 'Atracados', 'Operando no berço'],
+  ['DESPACHADOS', 'Despachados', 'Saíram do porto'],
+];
+let dados = null, etapa = 'ATRACADOS', grupo = 'Todos', sentido = 'Todos', busca = '';
+const $ = id => document.getElementById(id);
+const fmt = n => n == null ? '' : n.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const temSentido = (c, s) => s === 'Todos' || (c.sentido || '').includes(s);
+const passa = c => (grupo === 'Todos' || c.grupo === grupo) && temSentido(c, sentido);
+
+function navios() {
+  const t = busca.toLowerCase();
+  return (dados.situacoes[etapa] || []).filter(n => n.cargas.some(passa) &&
+    (!t || [n.navio, n.agencia, n.imo, n.berco, ...n.cargas.flatMap(c => [c.mercadoria, c.operador])].join(' ').toLowerCase().includes(t)));
+}
+
+// "16/10/2026 05:12" -> Date
+function data(texto) {
+  const m = /(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/.exec(texto || '');
+  return m ? new Date(+m[3], m[2] - 1, +m[1], +m[4], +m[5]) : null;
+}
+const diasDesde = texto => { const d = data(texto); return d ? (Date.now() - d) / 86400000 : null; };
+
+// Ritmo das últimas 24h contra o planejado. Só granel (contêiner não tem prancha em toneladas).
+function ritmo(c) {
+  if (c.unidade !== 't' || !c.prancha) return '';
+  const r = (c.tons_dia || 0) / c.prancha;
+  const [cls, txt] = r === 0 ? ['parado', 'Parado nas últimas 24h'] : r < 0.5 ? ['lento', `Lento: ${Math.round(r * 100)}% do ritmo`] : ['normal', `Normal: ${Math.round(r * 100)}% do ritmo`];
+  return `<span class="selo ${cls}" title="${fmt(c.tons_dia)} t nas últimas 24h; planejado ${fmt(c.prancha)} t/dia">${txt}</span>`;
+}
+
+// Coluna de data: muda conforme a etapa, porque cada tabela da APPA traz datas diferentes.
+function quando(n) {
+  const duas = (a, b) => `${esc(a)}${b ? `<small>${esc(b)}</small>` : ''}`;
+  if (etapa === 'ESPERADOS') return ['ETA', duas(n.eta)];
+  if (etapa === 'AO LARGO') {
+    const d = diasDesde(n.chegada);
+    const espera = d == null ? '' : `<span class="dias ${d >= 15 ? 'longo' : ''}">${Math.floor(d)} dias fundeado</span>`;
+    return ['Espera', `${espera}<small>chegou ${esc(n.chegada)}</small>`];
+  }
+  if (etapa === 'PROGRAMADOS') return ['Chegada', duas(n.chegada || n.eta)];
+  if (etapa === 'ATRACADOS') return ['Atracou / janela', duas(n.atracacao, n.janela)];
+  return ['Chegou / desatracou', duas(n.chegada, n.desatracacao)];
+}
+
+function render() {
+  $('etapas').innerHTML = ETAPAS.map(([k, nome, dica]) =>
+    `<button class="etapa" data-k="${k}" aria-pressed="${k === etapa}"><b>${(dados.situacoes[k] || []).length}</b>${nome}<br><span>${dica}</span></button>`).join('');
+  const grupos = ['Todos', ...[...new Set(Object.values(dados.situacoes).flat().flatMap(n => n.cargas.map(c => c.grupo)))]
+    .filter(g => g !== 'Sem carga').sort((a, b) => a.localeCompare(b, 'pt'))];
+  $('grupos').innerHTML = grupos.map(g => `<button class="chip" data-g="${esc(g)}" aria-pressed="${g === grupo}">${esc(g)}</button>`).join(' ');
+  $('sentidos').innerHTML = [['Todos', 'Todos'], ['Exp', 'Exportação'], ['Imp', 'Importação']]
+    .map(([v, r]) => `<button class="chip" data-s="${v}" aria-pressed="${v === sentido}">${r}</button>`).join(' ');
+
+  const lista = navios(), [rotulo] = quando({}), atracados = etapa === 'ATRACADOS';
+  if (etapa === 'AO LARGO') lista.sort((a, b) => (data(a.chegada) || 0) - (data(b.chegada) || 0));
+  $('cab').innerHTML = `<tr><th>Navio</th><th>Berço</th><th>Mercadoria</th><th>Sentido</th><th class="num">Previsto</th>${atracados ? '<th>Andamento</th>' : ''}<th>${rotulo}</th><th>Agência / operador</th></tr>`;
+  $('linhas').innerHTML = lista.length ? lista.map(n => {
+    const cs = n.cargas.filter(passa), [, data] = quando(n);
+    return `<tr>
+      <td class="navio">${esc(n.navio)}<small>IMO ${esc(n.imo)} · ${fmt(n.loa)} m · ${fmt(n.dwt)} DWT</small></td>
+      <td>${esc(n.berco)}</td>
+      <td>${cs.map(c => esc(c.mercadoria)).join('<br>')}</td>
+      <td>${cs.map(c => `<span class="sentido ${esc((c.sentido || '').slice(0, 3))}">${esc(c.sentido)}</span>`).join('<br>')}</td>
+      <td class="num">${cs.map(c => c.previsto ? `${fmt(c.previsto)} ${c.unidade}` : '').join('<br>')}</td>
+      ${atracados ? `<td style="min-width:160px">${cs.map(c => c.previsto ? `${fmt(c.realizado)} de ${fmt(c.previsto)}<div class="barra"><i style="width:${Math.min(100, 100 * (c.realizado || 0) / c.previsto)}%"></i></div>${ritmo(c)}` : '').join('')}</td>` : ''}
+      <td>${data}</td>
+      <td>${esc(n.agencia)}<small>${[...new Set(cs.map(c => c.operador))].map(esc).join(', ')}</small></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8" class="vazio">Nenhum navio com esse filtro.</td></tr>`;
+
+  // Toneladas por produto na etapa escolhida. Contêineres contam em movimentos e ficam de fora.
+  const soma = {};
+  for (const n of dados.situacoes[etapa] || []) for (const c of n.cargas) {
+    if (c.unidade !== 't' || !c.previsto || c.grupo === 'Passageiros' || !temSentido(c, sentido)) continue;
+    const s = soma[c.grupo] ||= { Exp: 0, Imp: 0 };
+    s[(c.sentido || '').startsWith('Imp') ? 'Imp' : 'Exp'] += c.previsto;
+  }
+  const ordem = Object.entries(soma).sort((a, b) => (b[1].Exp + b[1].Imp) - (a[1].Exp + a[1].Imp));
+  const max = Math.max(1, ...ordem.map(([, s]) => s.Exp + s.Imp));
+  $('tituloTotais').textContent = `Toneladas previstas — ${ETAPAS.find(e => e[0] === etapa)[1].toLowerCase()}`;
+  $('totais').innerHTML = ordem.length ? ordem.map(([g, s]) => `<div class="item"><span>${esc(g)}</span><span class="t">${fmt(s.Exp + s.Imp)} t</span>
+    <div class="barra"><i class="exp" style="width:${100 * s.Exp / max}%"></i><i class="imp" style="width:${100 * s.Imp / max}%"></i></div></div>`).join('')
+    + '<span class="sub"><span class="sentido Exp">Exp</span> <span class="sentido Imp">Imp</span></span>' : '<p class="vazio">Sem carga em toneladas.</p>';
+
+  const cl = dados.clima;
+  $('tempo').innerHTML = !cl ? '<p class="vazio">Previsão do tempo indisponível agora.</p>' : `
+    <div class="grande ${cl.chovendo ? 'chuva' : ''}">${cl.chovendo ? `Chovendo agora (${cl.mm_agora} mm/h)` : 'Sem chuva agora'}</div>
+    <div class="sub">Últimas 24h: ${cl.horas_chuva_24h} h com chuva (${cl.mm_24h} mm)</div>
+    ${cl.previsao.length ? `<div class="sub" style="margin-top:6px">Chuva prevista nas próximas 24h:</div><ul>${cl.previsao.slice(0, 8).map(h =>
+      `<li>${esc(h.hora)}: ${h.mm} mm · ${h.prob}%</li>`).join('')}${cl.previsao.length > 8 ? `<li>+${cl.previsao.length - 8} h</li>` : ''}</ul>`
+      : '<div class="sub" style="margin-top:6px">Sem chuva prevista nas próximas 24h.</div>'}
+    <p class="sub" style="margin:8px 0 0">Com chuva, o embarque de granéis (soja, milho, farelo, açúcar) e a descarga de fertilizantes param.</p>`;
+
+  const m = dados.mudancas || [];
+  $('mudancas').innerHTML = m.length ? `<p class="sub">Desde a leitura de ${esc(dados.desde)}</p><ul>${m.slice(0, 40).map(x =>
+    `<li><b>${esc(x.navio)}</b>: ${esc(x.de)} → ${esc(x.para)}<br><span class="sub">${esc(x.mercadoria)}</span></li>`).join('')}</ul>`
+    : `<p class="vazio">${dados.desde ? 'Nada mudou desde ' + esc(dados.desde) + '.' : 'A comparação aparece a partir da próxima leitura que trouxer mudança.'}</p>`;
+}
+
+// No seu PC a página fala com o servidor local; publicada (GitHub Pages) lê o data.json
+// que o GitHub gera a cada ~20 min, e "Atualizar agora" só recarrega esse arquivo.
+const LOCAL = ['127.0.0.1', 'localhost'].includes(location.hostname);
+
+async function carregar(forcar) {
+  $('status').textContent = 'atualizando…';
+  try {
+    const url = LOCAL ? '/api/lineup' + (forcar ? '?forcar=1' : '') : 'data.json?t=' + Date.now();
+    dados = await (await fetch(url)).json();
+    $('status').innerHTML = `Leitura da APPA: ${esc(dados.atualizado)} · <a href="${esc(dados.fonte)}" target="_blank" rel="noopener">fonte oficial</a> · ${LOCAL ? 'atualiza sozinho a cada 15 min' : 'atualizado automaticamente a cada ~20 min'}`;
+    $('erro').hidden = !dados.erro;
+    $('erro').textContent = dados.erro ? `Não consegui ler a APPA agora (${dados.erro}). Mostrando a última leitura boa.` : '';
+    if (dados.situacoes) render();
+  } catch (e) {
+    $('status').textContent = 'painel fora do ar';
+  }
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !dados) return;
+  if (b.id === 'atualizar') return carregar(true);
+  if (b.dataset.k) etapa = b.dataset.k; else if (b.dataset.g) grupo = b.dataset.g; else if (b.dataset.s) sentido = b.dataset.s;
+  render();
+});
+$('busca').addEventListener('input', e => { busca = e.target.value; if (dados) render(); });
+carregar(false);
+setInterval(() => carregar(false), 15 * 60 * 1000);
+</script>
+</body>
+</html>
